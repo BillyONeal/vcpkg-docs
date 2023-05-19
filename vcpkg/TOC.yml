@@ -141,6 +141,8 @@
   - name: Helper ports
     displayName: script port
     href: maintainers/authoring-script-ports.md
+  - name: Tool ports
+    href: maintainers/authoring-tool-ports.md
   - name: Host dependencies
     displayName: host, dependencies
     href: users/host-dependencies.md
