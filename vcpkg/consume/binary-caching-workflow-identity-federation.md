@@ -21,7 +21,7 @@ In this tutorial, you'll learn how to:
 
 > [!div class="checklist"]
 >
-> * [Set up an Entra Managed Identity](#1---set-up-an-entra-managed-identity)
+> * [Create an Entra Managed Identity](#1---create-an-entra-managed-identity)
 > * [Set up Workload Identity Federation between Azure Storage and Azure DevOps](#1---set-up-a-nuget-feed)
 > * [Generate a SAS token to authenticate with Azure Storage](#2---add-a-nuget-source)
 > * [Configure vcpkg to Azure Storage with the SAS token](#3---configure-vcpkg-to-use-your-nuget-feed)
@@ -44,16 +44,51 @@ In this tutorial, you'll learn how to:
 
 ::: zone-end
 
-## 1 - Set up an Entra Managed Identity
+## 1 - Create an Entra Managed Identity
 
 Skip this step if you already have configured a
-[Managed Identity](/entra/identity/managed-identities-azure-resources/overview) with access to your
-Storage Container.
+[Managed Identity](/entra/identity/managed-identities-azure-resources/overview) you wish to use.
 
-Follow the instructions to [set up an Azure Artifacts NuGet
-feed](/azure/devops/artifacts/get-started-nuget?view=azure-devops&preserve-view=true).
+In the Azure Portal, go to the page for a Resource Group in which you wish for the managed identity
+to be created, and press "+ Create". In the search box, enter "User Assigned Managed Identity".
+Choose "User Assigned Managed Identity" from "Microsoft" and choose "Create ->
+User Assigned Managed Identity". Name the identity, press "Review and Create", and "Create". For
+purposes of this documentation, the identity was named `vcpkg-docs-identity`.
 
-You can also use any other NuGet packages feed provider of your choice.
+## 2 - Set Up Workload Identity Federation with Azure DevOps
+
+In the Azure DevOps portal for the project in which you wish to run Pipelines, select
+"Project Settings" in the lower left corner. Then select "Service Connections" on the left.
+Then choose "New Service Connection" on the right. Choose the "Azure Resource Manager" radio button,
+and press Next. Select "Workload identity federation (manual)" and press next. Name the
+service connection and press next. For purposes of this documentation, the service connection was
+named `vcpkg-docs-identity-connection`. At this point, Azure DevOps should be showing an issuer
+and subject identifier.
+
+In another tab, to the Azure Portal navigate to the managed identity created in step 1. On the left
+select Settings/Federated Credentials, and select 'Add Credential'. In the drop down, select
+'Other'. Copy the 'Issuer URL' and 'Subject Identifer' from Azure DevOps into the form. Give the
+federated credential a name, and press 'Add'. For purposes of this documentation, the name used was
+`azure-devops-credential`.
+
+## 3 - Assign Managed Identity Permissons to the Storage Account Container
+
+Skip this step if you have already granted your managed identity permissions to your Storage Account
+Container.
+
+In the Azure Portal, go to the page for the Storage Account to use. On the left, select
+Data Storage/Containers, and choose the container you wish to use. This should open the Azure Portal
+to the properties for that specific container. On the left select "Access Control (IAM)", and choose
+"Add -> Add Role Assignment". Select "Azure Blob Data Reader" for read only access, or
+"Azure Blob Data Contributor" for read/write access, and press Next. Then, select the
+"Managed Identity" radio button, and click + Select Members. Select the managed identity you created
+in step 1. Then select 'Review and Assign' twice.
+
+Then, return to the page for the storage account container, and again on the left select
+"Access Control (IAM)", and choose "Add -> Add Role Assignment". Select "Storage Blob Delegator" and
+press Next. Then, select the "Managed Identity" radio button, and click + Select Members. Select the
+managed identity you create in step 1. Then select 'Review and Assign' twice.
+
 
 ## 2 - Add a NuGet source
 
